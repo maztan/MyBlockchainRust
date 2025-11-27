@@ -1,0 +1,31 @@
+FROM debian:latest
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install Rust dependencies and basic dev tools
+RUN apt-get update && apt-get install -y \
+    curl \
+    build-essential \
+    pkg-config \
+    libssl-dev \
+    git \
+    cmake \
+    llvm \
+    clang \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Rust (stable) via rustup
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+    && echo 'source $HOME/.cargo/env' >> /etc/bash.bashrc
+
+# Add non-root user (recommended for VS Code)
+WORKDIR /workspaces/MyBlockchainRust
+
+# Ensure cargo is available for the dev user
+ENV PATH="/home/${USERNAME}/.cargo/bin:${PATH}"
+
+CMD [ "bash" ]

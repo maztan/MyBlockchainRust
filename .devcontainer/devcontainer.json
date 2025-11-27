@@ -1,0 +1,23 @@
+{
+  "name": "MyBlockchainRust Dev (Debian)",
+  "build": {
+    "dockerfile": "container.docker",
+	"context": ".."
+  },
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+		"rust-analyzer.checkOnSave": true,
+        "rust-analyzer.check.command": "clippy"
+      },
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "vadimcn.vscode-lldb",
+        "ms-vscode.cpptools"
+      ]
+    }
+  }
+}
