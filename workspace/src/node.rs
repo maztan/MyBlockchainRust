@@ -12,6 +12,7 @@ use std::io::{Read, Write};
 
 use crate::blockchain::Blockchain;
 use crate::protocol_messages::ProtocolMessage;
+use bincode;
 
 /// Represents a node in the blockchain network.
 #[derive(Debug)]
@@ -72,32 +73,15 @@ impl Node {
 
         loop  {
             match framed.next().await {
-                Some(Ok(bytes)) => {
-                    println!("Received {} bytes of data", bytes.len());
-                    if bytes.is_empty() {
+                Some(Ok(msg_bytes)) => {
+                    println!("Received {} bytes of data", msg_bytes.len());
+                    if msg_bytes.is_empty() {
                         warn!("Received empty message");
                         continue;
                     }
 
-                    let message_type: u8 = bytes[0..1][0];
-                    match ProtocolMessage::try_from(message_type) {
-                        Ok(ProtocolMessage::Handshake) => {
-                            println!("Received a Handshake message");
-                            // Handle Handshake message
-                        },
-                        Ok(ProtocolMessage::Block) => {
-                            println!("Received a Block message");
-                            // Handle Block message
-                        },
-                        Ok(ProtocolMessage::Transaction) => {
-                            println!("Received a Transaction message");
-                            // Handle Transaction message
-                        },
-                        Err(_) => {
-                            warn!("Unknown message type: {}", message_type);
-                            continue; //ignore the message with unknown type
-                        }
-                    }
+                    // Create a bincode deserializer for the byte slice
+                    let mut deserializer = bincode::serde::decode_from_slice::<ProtocolMessage, bincode::config::Configuration>(&msg_bytes, bincode::config::standard());
                 },
                 Some(Err(e)) => {
                     warn!("Failed to read from stream: {}", e);

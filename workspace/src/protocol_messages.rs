@@ -1,8 +1,6 @@
-use core::num;
-
-use bincode;
 use num_enum::TryFromPrimitive;
-use serde::{Deserialize, Serialize, ser::SerializeStruct};
+use serde::{Deserialize, Serialize, de::Visitor};
+use bincode;
 
 #[derive(Debug, TryFromPrimitive)]
 #[repr(u8)]
@@ -55,22 +53,23 @@ impl Serialize for ProtocolMessage {
     }
 }
 
-impl<'de> Deserialize<'de> for ProtocolMessage {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: serde::Deserializer<'de> {
-                des  
+struct ProtocolMessageVisitor;
+
+impl Visitor<'_> for ProtocolMessageVisitor {
+    type Value = ProtocolMessage;
+
+    fn expecting(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        formatter.write_str("a byte array representing a ProtocolMessage")
     }
-}
 
-impl TryFrom<&[u8]> for ProtocolMessage {
-    type Error = bincode::Error;
-
-    fn try_from(data: &[u8]) -> Result<Self, Self::Error> {
+    fn visit_bytes<E>(self, data: &[u8]) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
         let message_type_raw = data[0];
 
         match ProtocolMessageType::try_from(message_type_raw) {
-            Err(_) => return Err(num_enum::TryFromPrimitiveError::new(message_type_raw)),
+            Err(_) => return Err(serde::de::Error::custom("Invalid message type")),
             Ok(message_type) => match message_type {
                 ProtocolMessageType::Handshake => {
                     let msg: HandshakeMessage = bincode::deserialize(&data[1..])?;
@@ -84,11 +83,26 @@ impl TryFrom<&[u8]> for ProtocolMessage {
                     let msg: TransactionMessage = bincode::deserialize(&data[1..])?;
                     Ok(ProtocolMessage::Transaction(msg))
                 }
-                _ => Err(bincode::ErrorKind::Custom("Unknown message type".to_string()).into()),
             },
         }
     }
 }
+
+impl<'de> Deserialize<'de> for ProtocolMessage {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de> {
+                deserializer.deserialize_bytes(ProtocolMessageVisitor)
+    }
+}
+
+// impl TryFrom<&[u8]> for ProtocolMessage {
+//     type Error = bincode::Error;
+
+//     fn try_from(data: &[u8]) -> Result<Self, Self::Error> {
+        
+//     }
+// }
 
 #[derive(Deserialize, Serialize)]
 pub struct HandshakeMessage {
