@@ -2,6 +2,7 @@ mod node;
 use crate::node::Node;
 
 mod blockchain;
+mod protocol_messages;
 
 #[tokio::main]
 async fn main() {

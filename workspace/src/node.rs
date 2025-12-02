@@ -11,6 +11,7 @@ use tokio::net::TcpStream;
 use std::io::{Read, Write};
 
 use crate::blockchain::Blockchain;
+use crate::protocol_messages::ProtocolMessage;
 
 /// Represents a node in the blockchain network.
 #[derive(Debug)]
@@ -79,16 +80,16 @@ impl Node {
                     }
 
                     let message_type: u8 = bytes[0..1][0];
-                    match MessageType::try_from(message_type) {
-                        Ok(MessageType::Handshake) => {
+                    match ProtocolMessage::try_from(message_type) {
+                        Ok(ProtocolMessage::Handshake) => {
                             println!("Received a Handshake message");
                             // Handle Handshake message
                         },
-                        Ok(MessageType::Block) => {
+                        Ok(ProtocolMessage::Block) => {
                             println!("Received a Block message");
                             // Handle Block message
                         },
-                        Ok(MessageType::Transaction) => {
+                        Ok(ProtocolMessage::Transaction) => {
                             println!("Received a Transaction message");
                             // Handle Transaction message
                         },
@@ -111,22 +112,7 @@ impl Node {
     }
 }
 
-#[repr(u8)]
-enum MessageType {
-    Handshake = 0,
-    Block = 1,
-    Transaction = 2,
+trait MessageSender {
+    fn send_message(&mut self, message: &[u8]) -> Result<(), Box<dyn Error>>;
 }
 
-impl TryFrom<u8> for MessageType {
-    type Error = ();
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        match value {
-            0 => Ok(MessageType::Handshake),
-            1 => Ok(MessageType::Block),
-            2 => Ok(MessageType::Transaction),
-            _ => Err(()),
-        }
-    }
-}
