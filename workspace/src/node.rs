@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use tokio::{net::TcpListener, signal, sync::watch, time::{self, Duration}};
-use futures::StreamExt;
+use futures::{StreamExt, SinkExt};
 use log::{info, warn};
 use std::{error::Error, str::FromStr};
 
@@ -13,6 +13,7 @@ use std::io::{Read, Write};
 use crate::blockchain::Blockchain;
 use crate::protocol_messages::ProtocolMessage;
 use bincode;
+use tokio::sync::oneshot;
 
 /// Represents a node in the blockchain network.
 #[derive(Debug)]
@@ -41,11 +42,16 @@ impl Node {
         }
     }
 
-    pub async fn start_server(&self) -> Result<(), Box<dyn Error>> {
+    pub async fn start_server(&self, ready_tx: Option<oneshot::Sender<()>>) -> Result<(), Box<dyn Error>> {
         // Placeholder for server start logic
         info!("Blockchain node {} server starting...", self.id);
 
         let listener = TcpListener::bind(self.network_addr).await?;
+
+        // Notify that the server is ready
+        if let Some(tx) = ready_tx {
+            let _ = tx.send(());
+        }
 
         loop{
             match listener.accept().await {
@@ -81,7 +87,15 @@ impl Node {
                     }
 
                     // Create a bincode deserializer for the byte slice
-                    let mut deserializer = bincode::serde::decode_from_slice::<ProtocolMessage, bincode::config::Configuration>(&msg_bytes, bincode::config::standard());
+                    match bincode::serde::decode_from_slice::<ProtocolMessage, bincode::config::Configuration>(&msg_bytes, bincode::config::standard()){
+                        Ok(protocol_msg) => {
+                            println!("Decoded ProtocolMessage: {:?}", protocol_msg);
+                            // Handle the protocol message as needed
+                        },
+                        Err(e) => {
+                            warn!("Failed to decode ProtocolMessage: {}", e);
+                        }
+                    }
                 },
                 Some(Err(e)) => {
                     warn!("Failed to read from stream: {}", e);
@@ -96,7 +110,26 @@ impl Node {
     }
 }
 
-trait MessageSender {
-    fn send_message(&mut self, message: &[u8]) -> Result<(), Box<dyn Error>>;
+pub struct NodeClient;
+
+pub trait MessageSender<MessageType> {
+    async fn send_message(&self, message: MessageType) -> Result<(), Box<dyn Error>>;
+}
+
+impl MessageSender<ProtocolMessage> for NodeClient {
+    async fn send_message(&self, message: ProtocolMessage) -> Result<(), Box<dyn Error>> {
+        // Placeholder for sending a message to a peer
+        let mut serialized_message = Vec::<u8>::new();
+
+        bincode::serde::encode_into_slice(message,  &mut serialized_message, bincode::config::standard())?;
+        let addr = SocketAddr::from_str("127.0.0.1:1031").unwrap();
+
+        let stream = tokio::net::TcpStream::connect(addr).await?;
+        let mut framed = Framed::new(stream, LengthDelimitedCodec::new());
+        framed.send(serialized_message.into()).await?;
+
+        println!("Sent message to {}", addr);
+        Ok(())
+    }
 }
 

@@ -1,15 +1,45 @@
 mod node;
-use crate::node::Node;
+use node::Node;
+use node::MessageSender;
+use node::NodeClient;
 
 mod blockchain;
 mod protocol_messages;
+use protocol_messages::ProtocolMessage;
+use tokio::sync::oneshot;
 
 #[tokio::main]
 async fn main() {
     println!("Starting node...");
-    let node = Node::new("test-node".to_string());
-    
-    if let Err(e) = node.start_server().await {
-        eprintln!("Error starting server: {}", e);
+
+    let node_id = "test-node".to_string();
+    let node = Node::new(node_id.clone());
+
+    let (server_ready_tx, server_ready_rx) = oneshot::channel();
+
+    let server_handle = tokio::spawn(async move {
+        if let Err(e) = node.start_server(Some(server_ready_tx)).await {
+            eprintln!("Error starting server: {}", e);
+            return;
+        }
+    });
+
+    // Wait for the server to be ready
+    let _ = server_ready_rx.await;
+    println!("Server ready.");
+
+    let client = NodeClient;
+
+    // Send a handshake
+    let handshake_msg = ProtocolMessage::Handshake (
+        protocol_messages::HandshakeMessage {
+            node_id: node_id.clone(),
+            protocol_version: 1,
+    });
+
+    if let Err(e) = client.send_message(handshake_msg).await{
+        eprintln!("Error sending handshake: {}", e);
     }
+    
+    server_handle.await.unwrap();
 }
