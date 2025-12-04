@@ -30,12 +30,21 @@ async fn main() {
 
     let client = NodeClient;
 
+    println!("Creating handshake message...");
     // Send a handshake
     let handshake_msg = ProtocolMessage::Handshake (
         protocol_messages::HandshakeMessage {
             node_id: node_id.clone(),
             protocol_version: 1,
     });
+
+    let handshake_msg2 = ProtocolMessage::Handshake (
+        protocol_messages::HandshakeMessage {
+            node_id: node_id.clone(),
+            protocol_version: 1,
+    });
+    let encoded = bincode::serde::encode_to_vec(handshake_msg2, bincode::config::standard()).unwrap();
+    println!("Encoded handshake message: {:?}", encoded);
 
     if let Err(e) = client.send_message(handshake_msg).await{
         eprintln!("Error sending handshake: {}", e);

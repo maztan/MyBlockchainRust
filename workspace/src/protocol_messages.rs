@@ -37,12 +37,13 @@ impl Serialize for ProtocolMessage {
         let mut serialized = Vec::<u8>::new();
         serialized.push(self.get_type() as u8);
 
-
+        println!("SERIALIZED");
         match self {
             ProtocolMessage::Handshake(m) => {
                 let encoded = bincode::serde::encode_to_vec(m, bincode::config::standard()).unwrap();
                 serialized.extend_from_slice(&encoded);
-                return serializer.serialize_bytes(&serialized);
+                println!("SERIALIZED_END");
+                serializer.serialize_bytes(&serialized)
             }
             ProtocolMessage::Block(m) => {
                 bincode::serde::encode_into_slice(m, &mut serialized[1..], bincode::config::standard()).unwrap();

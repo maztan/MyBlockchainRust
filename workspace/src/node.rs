@@ -38,7 +38,7 @@ impl Node {
             id,
             peers: std::collections::HashMap::new(),
             blockchain: Blockchain::new(),
-            network_addr: SocketAddr::from_str("127.0.0.1:1031").unwrap()
+            network_addr: SocketAddr::from_str("127.0.0.1:10311").unwrap()
         }
     }
 
@@ -119,11 +119,17 @@ pub trait MessageSender<MessageType> {
 impl MessageSender<ProtocolMessage> for NodeClient {
     async fn send_message(&self, message: ProtocolMessage) -> Result<(), Box<dyn Error>> {
         // Placeholder for sending a message to a peer
-        let mut serialized_message = Vec::<u8>::new();
+        //let mut serialized_message = Vec::<u8>::new();
 
-        bincode::serde::encode_into_slice(message,  &mut serialized_message, bincode::config::standard())?;
-        let addr = SocketAddr::from_str("127.0.0.1:1031").unwrap();
+        let serialized_message = bincode::serde::encode_to_vec(message, bincode::config::standard())?;
+        
+        println!("Message serialized");
 
+        println!("Before connecting to node");
+        
+        let addr = SocketAddr::from_str("127.0.0.1:10311").unwrap();
+
+        println!("Connecting to {}", addr);
         let stream = tokio::net::TcpStream::connect(addr).await?;
         let mut framed = Framed::new(stream, LengthDelimitedCodec::new());
         framed.send(serialized_message.into()).await?;
