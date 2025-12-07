@@ -86,9 +86,11 @@ impl Node {
                         continue;
                     }
 
+                    println!("Encoded handshake message (rcv by server): {:?}", msg_bytes.as_ref());
+
                     // Create a bincode deserializer for the byte slice
                     match bincode::serde::decode_from_slice::<ProtocolMessage, bincode::config::Configuration>(&msg_bytes, bincode::config::standard()){
-                        Ok(protocol_msg) => {
+                        Ok((protocol_msg, _bytes_read)) => {
                             println!("Decoded ProtocolMessage: {:?}", protocol_msg);
                             // Handle the protocol message as needed
                         },

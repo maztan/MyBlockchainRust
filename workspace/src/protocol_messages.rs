@@ -27,6 +27,17 @@ impl ProtocolMessage {
             ProtocolMessage::Transaction(_) => ProtocolMessageType::Transaction,
         }
     }
+
+    fn serialize_message<T,S>(&self, m: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where T: Serialize, S: serde::Serializer
+    {
+        let mut serialized = Vec::<u8>::new();
+        serialized.push(self.get_type() as u8);
+
+        let encoded = bincode::serde::encode_to_vec(m, bincode::config::standard()).unwrap();
+        serialized.extend_from_slice(&encoded);
+        serializer.serialize_bytes(&serialized)
+    }
 }
 
 impl Serialize for ProtocolMessage {
@@ -34,24 +45,16 @@ impl Serialize for ProtocolMessage {
     where
         S: serde::Serializer,
     {
-        let mut serialized = Vec::<u8>::new();
-        serialized.push(self.get_type() as u8);
 
-        println!("SERIALIZED");
         match self {
             ProtocolMessage::Handshake(m) => {
-                let encoded = bincode::serde::encode_to_vec(m, bincode::config::standard()).unwrap();
-                serialized.extend_from_slice(&encoded);
-                println!("SERIALIZED_END");
-                serializer.serialize_bytes(&serialized)
+                self.serialize_message(m, serializer) // this has to repeat for each variant, cannot pass self (this would cause infinite recursion, trying to serialize self again to serialize ProtocolMessage again and calling this method again)
             }
             ProtocolMessage::Block(m) => {
-                bincode::serde::encode_into_slice(m, &mut serialized[1..], bincode::config::standard()).unwrap();
-                return serializer.serialize_bytes(&serialized);
+                self.serialize_message(m, serializer)
             }
             ProtocolMessage::Transaction(m) => {
-                bincode::serde::encode_into_slice(m, &mut serialized[1..], bincode::config::standard()).unwrap();
-                return serializer.serialize_bytes(&serialized);
+                self.serialize_message(m, serializer)
             }
         }
     }
