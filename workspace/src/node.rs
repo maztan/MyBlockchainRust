@@ -67,8 +67,6 @@ impl Node {
                 }
             }
         }
-
-        Ok(())
     }
 
     async fn handle_peer_connection(mut stream: TcpStream) {

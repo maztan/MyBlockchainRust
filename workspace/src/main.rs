@@ -20,7 +20,6 @@ async fn main() {
     let server_handle = tokio::spawn(async move {
         if let Err(e) = node.start_server(Some(server_ready_tx)).await {
             eprintln!("Error starting server: {}", e);
-            return;
         }
     });
 

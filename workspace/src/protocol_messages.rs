@@ -1,6 +1,5 @@
 use num_enum::TryFromPrimitive;
 use serde::{Deserialize, Serialize, de::Visitor};
-use bincode;
 
 #[derive(Debug, TryFromPrimitive)]
 #[repr(u8)]
@@ -66,7 +65,7 @@ impl ProtocolMessageVisitor {
     fn standard_decode_from_slice<D>(&self, data: &[u8]) -> Result<(D, usize), bincode::error::DecodeError>
         where D: serde::de::DeserializeOwned
     { 
-        bincode::serde::decode_from_slice::<D, bincode::config::Configuration>(&data, bincode::config::standard())
+        bincode::serde::decode_from_slice::<D, bincode::config::Configuration>(data, bincode::config::standard())
     }
 
     fn deserialize_message<M>(&self, data: &[u8]) -> Result<(M, usize), bincode::error::DecodeError>
@@ -78,7 +77,7 @@ impl ProtocolMessageVisitor {
         match msg_result {
             Ok((msg, bytes_read)) => Ok((msg, bytes_read)),
 
-            Err(e) => return Err(e),
+            Err(e) => Err(e),
         }
     }
 }
@@ -97,24 +96,24 @@ impl Visitor<'_> for ProtocolMessageVisitor {
         let message_type_raw = data[0];
 
         match ProtocolMessageType::try_from(message_type_raw) {
-            Err(_) => return Err(serde::de::Error::custom("Invalid message type")),
+            Err(_) => Err(serde::de::Error::custom("Invalid message type")),
             Ok(message_type) => match message_type {
                 ProtocolMessageType::Handshake => {
                     match self.deserialize_message(&data[1..]){
-                        Ok(msg_result) => return Ok(ProtocolMessage::Handshake(msg_result.0)),
-                        Err(e) => return Err(serde::de::Error::custom(format!("Failed to deserialize HandshakeMessage: {}", e))),
+                        Ok(msg_result) => Ok(ProtocolMessage::Handshake(msg_result.0)),
+                        Err(e) => Err(serde::de::Error::custom(format!("Failed to deserialize HandshakeMessage: {}", e))),
                     }
                 }
                 ProtocolMessageType::Block => {
                     match self.deserialize_message(&data[1..]){
-                        Ok(msg_result) => return Ok(ProtocolMessage::Block(msg_result.0)),
-                        Err(e) => return Err(serde::de::Error::custom(format!("Failed to deserialize HandshakeMessage: {}", e))),
+                        Ok(msg_result) => Ok(ProtocolMessage::Block(msg_result.0)),
+                        Err(e) => Err(serde::de::Error::custom(format!("Failed to deserialize HandshakeMessage: {}", e))),
                     }
                 }
                 ProtocolMessageType::Transaction => {
                     match self.deserialize_message(&data[1..]){
-                        Ok(msg_result) => return Ok(ProtocolMessage::Transaction(msg_result.0)),
-                        Err(e) => return Err(serde::de::Error::custom(format!("Failed to deserialize HandshakeMessage: {}", e))),
+                        Ok(msg_result) => Ok(ProtocolMessage::Transaction(msg_result.0)),
+                        Err(e) => Err(serde::de::Error::custom(format!("Failed to deserialize HandshakeMessage: {}", e))),
                     }
                 }
             },
