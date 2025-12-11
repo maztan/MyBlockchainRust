@@ -173,7 +173,6 @@ dependencies = [
 name = "blockchain_node"
 version = "0.1.0"
 dependencies = [
- "axum",
  "bincode",
  "chrono",
  "env_logger",
@@ -190,6 +189,11 @@ dependencies = [
 [[package]]
 name = "blockchain_web_api"
 version = "0.1.0"
+dependencies = [
+ "axum",
+ "env_logger",
+ "log",
+]
 
 [[package]]
 name = "bumpalo"

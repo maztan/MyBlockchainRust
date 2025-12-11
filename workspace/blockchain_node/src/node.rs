@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use tokio::{net::TcpListener, signal, sync::watch, time::{self, Duration}};
 use futures::{StreamExt, SinkExt};
-use log::{info, warn};
+use log::{info, warn, debug};
 use std::{error::Error, str::FromStr};
 
 use std::net::{AddrParseError, SocketAddr};
@@ -43,7 +43,6 @@ impl Node {
     }
 
     pub async fn start_server(&self, ready_tx: Option<oneshot::Sender<()>>) -> Result<(), Box<dyn Error>> {
-        // Placeholder for server start logic
         info!("Blockchain node {} server starting...", self.id);
 
         let listener = TcpListener::bind(self.network_addr).await?;
@@ -78,18 +77,18 @@ impl Node {
         loop  {
             match framed.next().await {
                 Some(Ok(msg_bytes)) => {
-                    println!("Received {} bytes of data", msg_bytes.len());
+                    debug!("Received {} bytes of data", msg_bytes.len());
                     if msg_bytes.is_empty() {
                         warn!("Received empty message");
                         continue;
                     }
 
-                    println!("Encoded handshake message (rcv by server): {:?}", msg_bytes.as_ref());
+                    debug!("Encoded handshake message (rcv by server): {:?}", msg_bytes.as_ref());
 
                     // Create a bincode deserializer for the byte slice
                     match bincode::serde::decode_from_slice::<ProtocolMessage, bincode::config::Configuration>(&msg_bytes, bincode::config::standard()){
                         Ok((protocol_msg, _bytes_read)) => {
-                            println!("Decoded ProtocolMessage: {:?}", protocol_msg);
+                            debug!("Decoded ProtocolMessage: {:?}", protocol_msg);
                             // Handle the protocol message as needed
                         },
                         Err(e) => {
@@ -102,7 +101,7 @@ impl Node {
                     break;
                 },
                 None => {
-                    println!("Connection closed by peer");
+                    info!("Connection closed by peer");
                     break;
                 }
             }
@@ -123,18 +122,18 @@ impl MessageSender<ProtocolMessage> for NodeClient {
 
         let serialized_message = bincode::serde::encode_to_vec(message, bincode::config::standard())?;
         
-        println!("Message serialized");
+        debug!("Message serialized");
 
-        println!("Before connecting to node");
+        debug!("Before connecting to node");
         
         let addr = SocketAddr::from_str("127.0.0.1:10311").unwrap();
 
-        println!("Connecting to {}", addr);
+        debug!("Connecting to {}", addr);
         let stream = tokio::net::TcpStream::connect(addr).await?;
         let mut framed = Framed::new(stream, LengthDelimitedCodec::new());
         framed.send(serialized_message.into()).await?;
 
-        println!("Sent message to {}", addr);
+        debug!("Sent message to {}", addr);
         Ok(())
     }
 }

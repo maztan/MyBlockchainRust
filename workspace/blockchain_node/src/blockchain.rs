@@ -1,9 +1,6 @@
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-
-
-
 #[derive(Debug)]
 pub struct Blockchain{
     blocks: Vec<Block>,
