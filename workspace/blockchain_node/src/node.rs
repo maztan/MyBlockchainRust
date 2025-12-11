@@ -69,7 +69,7 @@ impl Node {
         }
     }
 
-    async fn handle_peer_connection(mut stream: TcpStream) {
+    async fn handle_peer_connection(stream: TcpStream) {
         //let mut accumulated_data = Vec::<u8>::new();
         //let mut buffer = [0, 512];
 
