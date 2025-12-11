@@ -3,24 +3,6 @@
 version = 4
 
 [[package]]
-name = "MyBlockchainRust"
-version = "0.1.0"
-dependencies = [
- "axum",
- "bincode",
- "chrono",
- "env_logger",
- "futures",
- "log",
- "num_enum",
- "serde",
- "serde_json",
- "sha2",
- "tokio",
- "tokio-util",
-]
-
-[[package]]
 name = "aho-corasick"
 version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -186,6 +168,28 @@ checksum = "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71"
 dependencies = [
  "generic-array",
 ]
+
+[[package]]
+name = "blockchain_node"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "bincode",
+ "chrono",
+ "env_logger",
+ "futures",
+ "log",
+ "num_enum",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
+name = "blockchain_web_api"
+version = "0.1.0"
 
 [[package]]
 name = "bumpalo"

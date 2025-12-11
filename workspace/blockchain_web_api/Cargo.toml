@@ -1,0 +1,10 @@
+[package]
+name = "blockchain_web_api"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+[[bin]]
+name = "blockchain_web_api"
+path = "src/main.rs"

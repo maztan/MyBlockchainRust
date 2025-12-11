@@ -1,8 +1,9 @@
-[workspace]
-members = ["blockchain_node", "blockchain_web_api"]
-resolver = "3"
+[package]
+name = "blockchain_node"
+version = "0.1.0"
+edition = "2024"
 
-[workspace.dependencies]
+[dependencies]
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -15,3 +16,7 @@ futures = "0.3"
 num_enum = "0.7"
 bincode = { version = "2.0", features = [ "serde" ] }
 axum = "0.8"
+
+[[bin]]
+name = "blockchain_node"
+path = "src/main.rs"
