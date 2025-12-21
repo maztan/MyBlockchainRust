@@ -38,7 +38,7 @@ impl Node {
             id,
             peers: std::collections::HashMap::new(),
             blockchain: Blockchain::new(),
-            network_addr: SocketAddr::from_str("127.0.0.1:10311").unwrap()
+            network_addr: SocketAddr::from_str("127.0.0.1:0").unwrap() // Default to an ephemeral port (selected by OS)
         }
     }
 
@@ -46,6 +46,7 @@ impl Node {
         info!("Blockchain node {} server starting...", self.id);
 
         let listener = TcpListener::bind(self.network_addr).await?;
+        info!("Node {} listening on {}", self.id, listener.local_addr()?);
 
         // Notify that the server is ready
         if let Some(tx) = ready_tx {
